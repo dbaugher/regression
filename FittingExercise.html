@@ -12372,15 +12372,52 @@ ParameterSet(logA=0.43279534968837052, Ea=2.540998743700754, dH=0.79049443823588
 </div>
 
 </div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Testing">Testing<a class="anchor-link" href="#Testing">&#182;</a></h1><p>This checks the output against the "true" values</p>
+
+</div>
+</div>
+</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">true_params</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">(</span><span class="mf">6.9</span><span class="p">,</span> <span class="c1"># logA in mol/L/s</span>
+                <span class="mf">49.</span><span class="p">,</span> <span class="c1"># Ea kJ/mol</span>
+                <span class="o">-</span><span class="mf">13.</span><span class="p">,</span> <span class="c1"># ∆H kJ/mol</span>
+                <span class="o">-</span><span class="mf">42.</span><span class="c1"># ∆S J/mol/K</span>
+                <span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;How many &#39;standard errors&#39; from the true value was the optimized value?:&quot;</span><span class="p">)</span>
+<span class="n">discrepancy</span> <span class="o">=</span> <span class="p">(</span><span class="n">array</span><span class="p">(</span><span class="n">optimized_parameters</span><span class="p">)</span> <span class="o">-</span> <span class="n">array</span><span class="p">(</span><span class="n">true_params</span><span class="p">))</span> <span class="o">/</span> <span class="n">array</span><span class="p">(</span><span class="n">standard_errors</span><span class="p">)</span>
+<span class="n">discrepancy</span> <span class="o">=</span> <span class="n">ParameterSet</span><span class="p">(</span><span class="o">*</span><span class="n">discrepancy</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">key</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="n">discrepancy</span><span class="o">.</span><span class="n">_asdict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">value</span><span class="p">)</span>
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>How many &#39;standard errors&#39; from the true value was the optimized value?:
+logA 1.47303519261
+Ea 1.48613650438
+dH 1.85766911234
+dS 1.85063552592
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 

@@ -223,7 +223,19 @@ print(optimized_parameters)
 print(standard_errors)
 
 
-# In[ ]:
+# # Testing
+# This checks the output against the "true" values
 
+# In[10]:
 
+true_params = ParameterSet(6.9, # logA in mol/L/s
+                49., # Ea kJ/mol
+                -13., # ∆H kJ/mol
+                -42.# ∆S J/mol/K
+                )
+print("How many 'standard errors' from the true value was the optimized value?:")
+discrepancy = (array(optimized_parameters) - array(true_params)) / array(standard_errors)
+discrepancy = ParameterSet(*discrepancy)
+for key,value in discrepancy._asdict().items():
+    print(key,value)
 
