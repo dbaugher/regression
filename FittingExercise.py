@@ -147,8 +147,83 @@ standard_errors = ParameterSet(0,0,0,0)
 
 # In[6]:
 
+M = sum((len(e.times) for e in experiments))
+print("In total will have M={} x_data entries".format(M))
+print("each with k=2 values, T and t")
+print("and M={} y_data entries, each being a concentration.".format(M))
+x_data = np.zeros((2,M))
+y_data = np.zeros(M)
+i=0
+for e in experiments:
+    for time, cA in zip(e.times, e.cA):
+        x_data[0,i] = e.T
+        x_data[1,i] = time
+        y_data[i] = cA
+        i += 1
+print('x_data = ',repr(x_data))
+print('y_data = ',repr(y_data))
+
+
+# In[7]:
+
+cA_start = 10.
+def my_model(x_data,
+          logA,  # /s 
+          Ea,  # kJ/mol
+          dH, # kJ/mol
+          dS,  # J/mol/K
+         ):
+    Ts, ts = x_data
+    M = len(Ts) # number of data points
+    y_data = np.zeros(M)
+    for i in range(M):
+        t = ts[i]
+        T = Ts[i]
+        R = 8.314 # J/mol/K
+        kf = 10**logA * np.exp(-Ea*1e3 / (R * T))
+        dG = dH*1e3 - T * dS # J/mol
+        Ka = np.exp(-dG / (R * T))
+        Kc = Ka # ideal solution, unit activity is 1 M
+        kr = kf / Kc
+        def dcAdt(cA, t):
+            cB = cA_start - cA
+            return kf * cB - kr * cA
+        result = scipy.integrate.odeint(dcAdt, cA_start, [0,t])
+        cA = result[-1,0]
+        y_data[i] = cA
+    return y_data
+my_model(np.array([[298],[10]]), 7,50,-10,-40,)
+
+
+# In[8]:
+
+optimal_parameters, covariance = scipy.optimize.curve_fit(my_model,
+                                                          x_data,
+                                                          y_data,
+                                                         p0=starting_guess,
+                                                         method='trf')
+
+print('fitted',optimal_parameters)
+stdev = np.sqrt(np.diag(covariance))
+print('+/-',stdev,'(one sigma)')
+
+print(covariance)
+optimized_parameters = ParameterSet(*optimal_parameters)
+print(optimized_parameters)
+
+standard_errors = ParameterSet(*stdev)
+print(standard_errors)
+
+
+# In[9]:
+
 # Finish your notebook with this cell
 print(starting_guess)
 print(optimized_parameters)
 print(standard_errors)
+
+
+# In[ ]:
+
+
 
