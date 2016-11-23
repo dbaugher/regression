@@ -239,3 +239,112 @@ discrepancy = ParameterSet(*discrepancy)
 for key,value in discrepancy._asdict().items():
     print(key,value)
 
+
+# # The source data
+# This is how I generated the "experimental" data
+
+# In[11]:
+
+true_params = ParameterSet(6.9, # logA in mol/L/s
+                49., # Ea kJ/mol
+                -13., # ∆H kJ/mol
+                -42.# ∆S J/mol/K
+                )
+
+
+def source_model(logA = true_params[0], # mol/L/s 
+          Ea = true_params[1],  # kJ/mol
+          dH = true_params[2],  # kJ/mol
+          dS = true_params[3],  # J/mol/K
+          T = 298.,   # K
+          cA_start = 10., # mol/L
+          end_time = 100., # s
+          plot = False,
+          times = None,
+         ):
+    
+    R = 8.314 # J/mol/K
+    kf = 10**logA * np.exp(-Ea*1e3 / (R * T))
+    dG = dH*1e3 - T * dS # J/mol
+    Ka = np.exp(-dG / (R * T))
+    Kc = Ka # ideal solution, unit activity is 1 M
+    kr = kf / Kc
+    
+    if times is None:
+        times = np.linspace(0,end_time)
+    assert times[0]==0, "Initial value problem needs to have t=0 at start"
+    def dcAdt(cA, t):
+        cB = cA_start - cA
+        return kf * cB - kr * cA
+    result = scipy.integrate.odeint(dcAdt, cA_start, times)
+    result = result.T
+    if plot:
+        plt.plot(times, result[0])
+        plt.ylim(0,)
+        plt.ylabel('$C_A$')
+        plt.xlabel('time')
+    return times, result.T
+
+times, result = source_model(plot=True)
+
+
+# In[12]:
+
+def experiment(cA_start, T, measure_times,
+              T_stdev = 1.,
+              time_stdev = 0.5,
+              time_offset_stdev = 1.0,
+              measurement_stdev = 0.1):
+    
+    # T_stdev = time_stdev = time_offset_stdev = measurement_stdev = 1e-8 # turn off errors
+
+    # Just for the plot
+    times,values = source_model(cA_start = cA_start,
+                        T = T,
+                        plot = True)
+    
+    offset = np.random.normal(scale=time_offset_stdev)
+    
+    time_errors = np.random.normal(scale=time_stdev, size=measure_times.shape)
+    ode_times = np.append([0],measure_times + time_errors + offset)
+    times,values = source_model(cA_start = cA_start,
+                         T = T + np.random.normal(scale=T_stdev),
+                        times = ode_times)
+    measured_times = times[1:]
+    measured_values = values[1:,0]
+    #print(measured_values)
+    measured_values += np.random.normal(scale=measurement_stdev, size=measured_values.shape)
+    plt.plot(measure_times,measured_values,'ro')
+    plt.title("T={:.0f}K".format(T))
+    return ExperimentData(
+        T = T,
+        cA_start = cA_start,
+        times = measure_times,
+        cA = measured_values
+        )
+
+
+# In[13]:
+
+# This will be different each time you run it, as I didn't seed the random number generator
+e1 = experiment(10., 273.15+25, np.arange(10,110,10))
+plt.show()
+e2 = experiment(10., 273.15+35, np.arange(10,110,10))
+plt.show()
+e3 = experiment(10., 273.15+50, np.arange(10,110,10))
+plt.show()
+
+experiments = [e1, e2, e3]
+
+
+# In[14]:
+
+for e in experiments:
+    plot_experiment(e)
+print('experiments =',repr(experiments))
+
+
+# In[ ]:
+
+
+
